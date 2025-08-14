@@ -1,16 +1,18 @@
-# AnubisGuardian
+<div align="center">
+ <h1>Anubis Mem-Tool</h1>
 
-<p align="center">
-  <strong>Sebuah modul Zygisk minimalis untuk <i>native function hooking</i> pada Android, dirancang untuk modifikasi game.</strong>
-</p>
+ <p align="center">
+   <strong>Sebuah modul Zygisk minimalis untuk <i>native function hooking</i> pada Android, dirancang untuk modifikasi game.</strong>
+ </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Language-C%2B%2B-blue.svg" alt="Language C++">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT">
-  <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status Active">
-</p>
+ <p align="center">
+   <img src="https://img.shields.io/badge/Language-C%2B%2B-blue.svg" alt="Language C++">
+   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT">
+   <img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status Active">
+ </p>
+</div>
 
-AnubisGuardian adalah modul Zygisk yang ringan dan kuat yang memungkinkan *hooking* langsung pada fungsi *native* di dalam aplikasi Android. Dengan memanfaatkan kekuatan Zygisk untuk injeksi tahap awal dan **Dobby** untuk *inline hooking* yang tangguh, modul ini menyediakan alternatif tersembunyi dibandingkan *framework* besar seperti Frida untuk analisis dan modifikasi game.
+Anubis Mem-Tool adalah modul Zygisk yang ringan dan kuat yang memungkinkan *hooking* langsung pada fungsi *native* di dalam aplikasi Android. Dengan memanfaatkan kekuatan Zygisk untuk injeksi tahap awal dan **Dobby** untuk *inline hooking* yang tangguh, modul ini menyediakan alternatif tersembunyi dibandingkan *framework* besar seperti Frida untuk analisis dan modifikasi game.
 
 ## ✨ Fitur Utama
 
@@ -27,7 +29,7 @@ AnubisGuardian adalah modul Zygisk yang ringan dan kuat yang memungkinkan *hooki
 
 ## 🚀 Instalasi (Untuk Pengguna)
 
-1.  Unduh rilis terbaru dari [halaman Rilis](link-to-your-releases-page).
+1.  Unduh rilis terbaru dari [Release](https://github.com/RaihanZxx/Anubis-Mem-Tool/releases).
 2.  Buka aplikasi Magisk/KernelSU.
 3.  Buka bagian `Modul`.
 4.  Pilih `Instal dari penyimpanan` dan pilih file `.zip` yang telah diunduh.
@@ -37,8 +39,8 @@ AnubisGuardian adalah modul Zygisk yang ringan dan kuat yang memungkinkan *hooki
 
 1.  **Clone repositori ini:**
     ```bash
-    git clone https://link-to-your-repo.git
-    cd AnubisGuardian
+    git clone https://github.com/RaihanZxx/Anubis-Mem-Tool
+    cd Anubis-Mem-Tool
     ```
 
 2.  **Buka proyek** di Android Studio atau jalankan build dari baris perintah:
@@ -79,4 +81,4 @@ Modul ini dibuat untuk tujuan pendidikan dan penelitian. Memodifikasi perangkat 
 
 Kode unik dan kontribusi signifikan dalam proyek **Anubis Mem-Tool** ini dirilis di bawah **MIT License**. Anda dapat melihat detailnya di file `LICENSE`.
 
-Harap dicatat bahwa proyek ini pada awalnya di-fork dari Zygisk-Module-Sample (https://github.com/topjohnwu/zygisk-module-sample) oleh topjohnwu. Bagian dasar dan struktur template dari proyek tersebut tidak memiliki lisensi eksplisit dan semua hak atas kode tersebut tetap menjadi milik penulis aslinya. Lisensi MIT hanya berlaku untuk modifikasi dan kode baru yang diperkenalkan dalam fork ini.
+Harap dicatat bahwa proyek ini pada awalnya di-fork dari [Zygisk-Module-Sample](https://github.com/topjohnwu/zygisk-module-sample) oleh topjohnwu. Bagian dasar dan struktur template dari proyek tersebut tidak memiliki lisensi eksplisit dan semua hak atas kode tersebut tetap menjadi milik penulis aslinya. Lisensi MIT hanya berlaku untuk modifikasi dan kode baru yang diperkenalkan dalam fork ini.
