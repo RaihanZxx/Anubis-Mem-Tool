@@ -3,5 +3,5 @@ name=${moduleName}
 version=${versionName}
 versionCode=${versionCode}
 author=HanSoBored
-description=Anubis Guardian Protect Injection From Anti-Cheat
+description=Anubis Mem-Tool, Inject Cheat & Bypass Anti-Cheat Games.
 #updateJson=

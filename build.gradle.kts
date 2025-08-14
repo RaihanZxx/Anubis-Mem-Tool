@@ -19,12 +19,12 @@ val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
 val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
 
 // also the soname
-val moduleId by extra("anubisguardian")
-val moduleName by extra("AnubisGuardian")
+val moduleId by extra("anubis-mem-tool")
+val moduleName by extra("Anubis Mem-Tool")
 val verName by extra("v1.0.0")
 val verCode by extra(gitCommitCount)
 val commitHash by extra(gitCommitHash)
-val abiList by extra(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"))
+val abiList by extra(listOf("arm64-v8a", "armeabi-v7a"))
 
 val androidMinSdkVersion by extra(26)
 val androidTargetSdkVersion by extra(34)
