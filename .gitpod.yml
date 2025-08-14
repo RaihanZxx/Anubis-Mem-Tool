@@ -1,0 +1,22 @@
+# Menggunakan image custom yang kita definisikan di .gitpod.Dockerfile
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Sync & Prepare
+    # init berjalan setelah workspace siap, sempurna untuk tugas proyek
+    init: |
+      echo ">>> Syncing Gradle project and making wrapper executable..."
+      ./gradlew --daemon
+      chmod +x ./gradlew
+
+    # command adalah perintah default saat terminal terbuka
+    command: |
+      echo ""
+      echo "================================================="
+      echo "✅  AnubisGuard Environment is Ready!"
+      echo ""
+      echo "To build the release module, run:"
+      echo "   ./gradlew :module:zipRelease"
+      echo "================================================="
+      echo ""
