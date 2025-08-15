@@ -62,13 +62,13 @@ static void (*original_ProcessShoot)(void*);
 void hooked_ProcessShoot(void*) { return; }
 
 static float (*original_GetReloadSpeedRate)(void*);
-float hooked_GetReloadSpeedRate(void* this_ptr) { return original_GetReloadSpeedRate(this_ptr) * 1.35f; }
+float hooked_GetReloadSpeedRate(void* this_ptr) { return original_GetReloadSpeedRate(this_ptr) * 1.8f; }
 
 static float (*original_GetAimSpreadShooting)(void*);
 float hooked_GetAimSpreadShooting(void* this_ptr) { return 0.0f; }
 
 static float (*original_GetShootDelay)(void*);
-float hooked_GetShootDelay(void* this_ptr) { return original_GetShootDelay(this_ptr) * 0.75f; }
+float hooked_GetShootDelay(void* this_ptr) { return original_GetShootDelay(this_ptr) * 0.35f; }
 
 static void (*original_ProcessGetHurt)(void*, short);
 void hooked_ProcessGetHurt(void* this_ptr, short damage) { original_ProcessGetHurt(this_ptr, damage * 0.5f); }
