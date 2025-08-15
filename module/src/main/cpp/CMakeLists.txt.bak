@@ -26,9 +26,8 @@ target_link_libraries(${MODULE_NAME}
     cxx
     log
     dl
-    android
     EGL          # <-- PENTING UNTUK MENDAPATKAN KONTEKS RENDER
-    GLESv3       # <-- PENTING UNTUK FUNGSI GAMBAR OPENGL
+    GLESv2       # <-- PENTING UNTUK FUNGSI GAMBAR OPENGL
     ${CMAKE_CURRENT_SOURCE_DIR}/dobby/${CMAKE_ANDROID_ARCH_ABI}/libdobby.a
 )
 
