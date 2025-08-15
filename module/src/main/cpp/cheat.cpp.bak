@@ -22,6 +22,12 @@ bool g_ShowMenu = true;
 int g_ScreenWidth = 0;
 int g_ScreenHeight = 0;
 
+// --- Variabel untuk Fitur Menu ---
+// Dipindahkan ke sini agar menjadi variabel global yang bisa diakses oleh hooked_eglSwapBuffers
+bool g_NoRecoil = false;
+bool g_RapidFire = false;
+
+
 // --- Pointer ke Fungsi eglSwapBuffers Asli ---
 EGLBoolean (*original_eglSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
 
@@ -62,8 +68,11 @@ EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     if (g_ShowMenu) {
         ImGui::Begin("Anubis-Mem-Tool");
         ImGui::Text("Hello from Zygisk ImGui!");
-        ImGui::Checkbox("No Recoil", &g_NoRecoil); // Contoh checkbox
-        ImGui::Checkbox("Rapid Fire", &g_RapidFire); // Contoh checkbox
+        
+        // Sekarang variabel ini dikenali karena sudah dideklarasikan di scope global
+        ImGui::Checkbox("No Recoil", &g_NoRecoil);
+        ImGui::Checkbox("Rapid Fire", &g_RapidFire);
+        
         ImGui::End();
     }
 
@@ -105,7 +114,6 @@ void do_hooking_thread() {
     // Kita tidak perlu menutup handle egl_handle
 }
 
-// ... (Class AnubisMemToolModule dan REGISTER_ZYGISK_MODULE tidak berubah, hanya saja kita panggil thread baru) ...
 class AnubisMemToolModule : public zygisk::ModuleBase {
 public:
     void onLoad(Api *api, JNIEnv *env) override {
@@ -131,9 +139,7 @@ public:
 private:
     Api *api;
     JNIEnv *env;
-    // Dummy variables for the menu example
-    bool g_NoRecoil = true;
-    bool g_RapidFire = false;
+    // Variabel g_NoRecoil dan g_RapidFire dihapus dari sini
 };
 
 REGISTER_ZYGISK_MODULE(AnubisMemToolModule)

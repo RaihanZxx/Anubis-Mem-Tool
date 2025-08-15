@@ -22,11 +22,10 @@ bool g_ShowMenu = true;
 int g_ScreenWidth = 0;
 int g_ScreenHeight = 0;
 
-// --- Variabel untuk Fitur Menu ---
-// Dipindahkan ke sini agar menjadi variabel global yang bisa diakses oleh hooked_eglSwapBuffers
-bool g_NoRecoil = false;
+// === PINDAHKAN VARIABEL KE SINI ===
+bool g_NoRecoil = true;
 bool g_RapidFire = false;
-
+// ===================================
 
 // --- Pointer ke Fungsi eglSwapBuffers Asli ---
 EGLBoolean (*original_eglSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
@@ -35,23 +34,18 @@ EGLBoolean (*original_eglSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
 EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     // Tahap Inisialisasi (hanya berjalan sekali)
     if (!g_IsGuiInitialized) {
-        // Dapatkan ukuran layar dari EGL
         eglQuerySurface(dpy, surface, EGL_WIDTH, &g_ScreenWidth);
         eglQuerySurface(dpy, surface, EGL_HEIGHT, &g_ScreenHeight);
 
-        // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
 
-        // Setup Dear ImGui style
         ImGui::StyleColorsDark();
 
-        // Setup Platform/Renderer backends
-        ImGui_ImplAndroid_Init(nullptr); // Gunakan null karena kita tidak punya window handle
-        ImGui_ImplOpenGL3_Init("#version 300 es"); // Sesuaikan jika game menggunakan GLES2
+        ImGui_ImplAndroid_Init(nullptr);
+        ImGui_ImplOpenGL3_Init("#version 300 es");
 
-        // Setup font
         io.Fonts->AddFontDefault();
 
         LOGD("ImGui Initialized! Screen size: %d x %d", g_ScreenWidth, g_ScreenHeight);
@@ -59,7 +53,6 @@ EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     }
 
     // --- Loop Render ImGui (berjalan setiap frame) ---
-    // Mulai frame Dear ImGui
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplAndroid_NewFrame();
     ImGui::NewFrame();
@@ -68,11 +61,9 @@ EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     if (g_ShowMenu) {
         ImGui::Begin("Anubis-Mem-Tool");
         ImGui::Text("Hello from Zygisk ImGui!");
-        
-        // Sekarang variabel ini dikenali karena sudah dideklarasikan di scope global
+        // Baris ini sekarang akan berfungsi dengan benar
         ImGui::Checkbox("No Recoil", &g_NoRecoil);
         ImGui::Checkbox("Rapid Fire", &g_RapidFire);
-        
         ImGui::End();
     }
 
@@ -87,10 +78,8 @@ EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
 
 void do_hooking_thread() {
     LOGD("Hooking thread started. Waiting for EGL...");
-    // Beri waktu game untuk inisialisasi
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    // Temukan dan hook eglSwapBuffers
     void* egl_handle = dlopen("libEGL.so", RTLD_LAZY);
     if (!egl_handle) {
         LOGD("FATAL: Could not open libEGL.so");
@@ -110,8 +99,6 @@ void do_hooking_thread() {
     } else {
         LOGD("FAILED: DobbyHook for eglSwapBuffers failed with code %d", result);
     }
-
-    // Kita tidak perlu menutup handle egl_handle
 }
 
 class AnubisMemToolModule : public zygisk::ModuleBase {
@@ -139,7 +126,7 @@ public:
 private:
     Api *api;
     JNIEnv *env;
-    // Variabel g_NoRecoil dan g_RapidFire dihapus dari sini
+    // HAPUS VARIABEL DARI SINI
 };
 
 REGISTER_ZYGISK_MODULE(AnubisMemToolModule)
