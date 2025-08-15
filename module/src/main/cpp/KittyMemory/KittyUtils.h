@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
+#include <cstdio>  // Untuk snprintf
+#include <cctype>  // Untuk isxdigit, isprint
 
 namespace KittyUtils {
 
@@ -19,43 +20,46 @@ namespace KittyUtils {
             return ""; 
 
         const unsigned char *data = static_cast<const unsigned char *>(address);
+        std::string result;
+        // Perkirakan ukuran untuk menghindari realokasi berulang
+        result.reserve(len * 4); 
 
-        std::stringstream ss;
-        ss << std::hex << std::uppercase << std::setfill('0');
+        char line_buffer[rowSize * 4 + 20];
+        char ascii_buffer[rowSize + 1];
 
-        size_t i, j;
-
-        for (i = 0; i < len; i += rowSize)
+        for (size_t i = 0; i < len; i += rowSize)
         {
-            // offset
-            ss << std::setw(8) << i << ": ";
+            char* line_ptr = line_buffer;
 
-            // row bytes
-            for (j = 0; (j < rowSize) && ((i + j) < len); j++)
-                ss << std::setw(2) << static_cast<unsigned int>(data[i + j]) << " ";
+            // Offset
+            line_ptr += snprintf(line_ptr, sizeof(line_buffer) - (line_ptr - line_buffer), "%08zX: ", i);
 
-            // fill row empty space
-            for (; j < rowSize; j++)
-                ss << "   ";
+            // Baris byte heksadesimal
+            size_t j = 0;
+            for (j = 0; (j < rowSize) && ((i + j) < len); j++) {
+                line_ptr += snprintf(line_ptr, sizeof(line_buffer) - (line_ptr - line_buffer), "%02X ", data[i + j]);
+                ascii_buffer[j] = std::isprint(data[i + j]) ? data[i + j] : '.';
+            }
+            ascii_buffer[j] = '\0';
 
-            // ASCII
-            if (showASCII)
-            {
-                ss << " ";
-
-                for (size_t j = 0; (j < rowSize) && ((i + j) < len); j++)
-                {
-                    if (std::isprint(data[i + j]))
-                        ss << data[i + j];
-                    else
-                        ss << '.';
-                }
+            // Isi sisa spasi kosong
+            for (; j < rowSize; j++) {
+                line_ptr += snprintf(line_ptr, sizeof(line_buffer) - (line_ptr - line_buffer), "   ");
             }
 
-            ss << std::endl;
+            // Gabungkan dengan ASCII jika diaktifkan
+            if (showASCII) {
+                result.append(line_buffer);
+                result.append(" ");
+                result.append(ascii_buffer);
+                result.append("\n");
+            } else {
+                result.append(line_buffer);
+                result.append("\n");
+            }
         }
 
-        return ss.str();
+        return result;
     }
 
 }
