@@ -2,88 +2,111 @@
 #include <android/log.h>
 #include <thread>
 #include <chrono>
-#include <cstdio>
-#include <dlfcn.h> // Header untuk dlopen
+#include <dlfcn.h>
+#include <EGL/egl.h> // Header untuk EGL
 
 #include "zygisk.hpp"
 #include "dobby.h"
+#include "imgui.h"
+#include "imgui_impl_android.h"
+#include "imgui_impl_opengl3.h"
 
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "AnubisGuardian", __VA_ARGS__)
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "Anubis-Mem-Tool-GUI", __VA_ARGS__)
 
 using zygisk::Api;
 using zygisk::AppSpecializeArgs;
 
-// --- KONFIGURASI ---
-const char* GAME_LIBRARY_NAME = "libMyGame.so";
-const unsigned long PROCESS_SHOOT_OFFSET = 0x33bfb54;
-// --------------------
+// --- Status & Variabel Global untuk GUI ---
+bool g_IsGuiInitialized = false;
+bool g_ShowMenu = true;
+int g_ScreenWidth = 0;
+int g_ScreenHeight = 0;
 
-static void (*original_ProcessShoot)(void* this_ptr);
+// --- Pointer ke Fungsi eglSwapBuffers Asli ---
+EGLBoolean (*original_eglSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
 
-void hooked_ProcessShoot(void* this_ptr) {
-    static bool hook_triggered = false;
-    if (!hook_triggered) {
-        LOGD("-------------------- RECOIL HOOK TRIGGERED! FUNGSI DILUMPUHKAN! --------------------");
-        hook_triggered = true;
+// --- Hook untuk eglSwapBuffers ---
+EGLBoolean hooked_eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
+    // Tahap Inisialisasi (hanya berjalan sekali)
+    if (!g_IsGuiInitialized) {
+        // Dapatkan ukuran layar dari EGL
+        eglQuerySurface(dpy, surface, EGL_WIDTH, &g_ScreenWidth);
+        eglQuerySurface(dpy, surface, EGL_HEIGHT, &g_ScreenHeight);
+
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+
+        // Setup Platform/Renderer backends
+        ImGui_ImplAndroid_Init(nullptr); // Gunakan null karena kita tidak punya window handle
+        ImGui_ImplOpenGL3_Init("#version 300 es"); // Sesuaikan jika game menggunakan GLES2
+
+        // Setup font
+        io.Fonts->AddFontDefault();
+
+        LOGD("ImGui Initialized! Screen size: %d x %d", g_ScreenWidth, g_ScreenHeight);
+        g_IsGuiInitialized = true;
     }
-    return;
+
+    // --- Loop Render ImGui (berjalan setiap frame) ---
+    // Mulai frame Dear ImGui
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplAndroid_NewFrame();
+    ImGui::NewFrame();
+
+    // Gambar menu kita
+    if (g_ShowMenu) {
+        ImGui::Begin("Anubis-Mem-Tool");
+        ImGui::Text("Hello from Zygisk ImGui!");
+        ImGui::Checkbox("No Recoil", &g_NoRecoil); // Contoh checkbox
+        ImGui::Checkbox("Rapid Fire", &g_RapidFire); // Contoh checkbox
+        ImGui::End();
+    }
+
+    // Render frame Dear ImGui
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    // Panggil fungsi asli untuk menampilkan frame ke layar
+    return original_eglSwapBuffers(dpy, surface);
 }
 
-// Fungsi get_module_base kita sekarang lebih bisa diandalkan
-static uintptr_t get_module_base(const char* module_name) {
-    FILE* fp = fopen("/proc/self/maps", "r");
-    if (!fp) return 0;
-    char line[1024];
-    uintptr_t base = 0;
-    while (fgets(line, sizeof(line), fp)) {
-        // Kita hanya mencari nama file, bukan path lengkap, dan pastikan executable
-        if (strstr(line, module_name) && strstr(line, "r-xp")) {
-            base = (uintptr_t)strtoul(line, NULL, 16);
-            break;
-        }
-    }
-    fclose(fp);
-    return base;
-}
 
 void do_hooking_thread() {
-    LOGD("Hooking thread started. Waiting for %s to be loaded by the system...", GAME_LIBRARY_NAME);
-    
-    // PENDEKATAN BARU: Gunakan dlopen untuk memeriksa apakah library sudah dimuat
-    void* handle = nullptr;
-    while ((handle = dlopen(GAME_LIBRARY_NAME, RTLD_NOLOAD)) == nullptr) {
-        // Jika handle adalah null, library belum siap. Tunggu.
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    // Jika kita sampai di sini, library PASTI sudah dimuat. Tutup handle yang tidak kita perlukan lagi.
-    dlclose(handle);
+    LOGD("Hooking thread started. Waiting for EGL...");
+    // Beri waktu game untuk inisialisasi
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    LOGD("System has loaded %s! Now finding its base address.", GAME_LIBRARY_NAME);
-    
-    uintptr_t base_address = get_module_base(GAME_LIBRARY_NAME);
-    if (base_address == 0) {
-        LOGD("FATAL: Library loaded but could not find base address in /maps. Aborting.");
+    // Temukan dan hook eglSwapBuffers
+    void* egl_handle = dlopen("libEGL.so", RTLD_LAZY);
+    if (!egl_handle) {
+        LOGD("FATAL: Could not open libEGL.so");
         return;
     }
 
-    LOGD("%s found at address: %p", GAME_LIBRARY_NAME, (void*)base_address);
-    
-    // Coba dengan atau tanpa Thumb bit. Mulai dengan yang tanpa.
-    void* target_address = (void*)(base_address + PROCESS_SHOOT_OFFSET);
-    // void* target_address = (void*)(base_address + (PROCESS_SHOOT_OFFSET | 1));
-
-    LOGD("Calculated target address: %p", target_address);
-
-    int result = DobbyHook(target_address, (void*)hooked_ProcessShoot, (void**)&original_ProcessShoot);
-
-    if (result == 0) {
-        LOGD("DobbyHook SUCCESS! No recoil should be active.");
-    } else {
-        LOGD("DobbyHook FAILED with code: %d", result);
+    void* swap_buffers_addr = dlsym(egl_handle, "eglSwapBuffers");
+    if (!swap_buffers_addr) {
+        LOGD("FATAL: Could not find eglSwapBuffers symbol");
+        dlclose(egl_handle);
+        return;
     }
+
+    int result = DobbyHook(swap_buffers_addr, (void*)hooked_eglSwapBuffers, (void**)&original_eglSwapBuffers);
+    if (result == 0) {
+        LOGD("SUCCESS: eglSwapBuffers hooked at %p", swap_buffers_addr);
+    } else {
+        LOGD("FAILED: DobbyHook for eglSwapBuffers failed with code %d", result);
+    }
+
+    // Kita tidak perlu menutup handle egl_handle
 }
 
-class AnubisGuardianModule : public zygisk::ModuleBase {
+// ... (Class AnubisMemToolModule dan REGISTER_ZYGISK_MODULE tidak berubah, hanya saja kita panggil thread baru) ...
+class AnubisMemToolModule : public zygisk::ModuleBase {
 public:
     void onLoad(Api *api, JNIEnv *env) override {
         this->api = api;
@@ -97,10 +120,10 @@ public:
         const char *app_name = this->env->GetStringUTFChars(app_name_jstring, nullptr);
         if (!app_name) return;
         
-        const char* target_package_name = "com.gameparadiso.milkchoco"; // GANTI DENGAN PAKET ANDA
+        const char* target_package_name = "com.gameparadiso.milkchoco";
 
         if (strcmp(app_name, target_package_name) == 0) {
-            LOGD("Target application detected. Starting professional hooking thread.");
+            LOGD("Target application detected. Starting GUI hooking thread.");
             std::thread(do_hooking_thread).detach();
         }
         this->env->ReleaseStringUTFChars(app_name_jstring, app_name);
@@ -108,6 +131,9 @@ public:
 private:
     Api *api;
     JNIEnv *env;
+    // Dummy variables for the menu example
+    bool g_NoRecoil = true;
+    bool g_RapidFire = false;
 };
 
-REGISTER_ZYGISK_MODULE(AnubisGuardianModule)
+REGISTER_ZYGISK_MODULE(AnubisMemToolModule)
